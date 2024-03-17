@@ -114,7 +114,7 @@ public class WeatherObservationService {
      * Method, which processes weather observations data
      * Automatically every hour at HH:15
      */
-    //@Scheduled(cron = "0 15 * * * ?")
+    @Scheduled(cron = "0 15 * * * ?")
     public void updateWeatherData() {
 
         try {
