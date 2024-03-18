@@ -1,9 +1,9 @@
 package com.delivery.deliveryfee.business_rules;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -12,6 +12,7 @@ import java.util.List;
 public class BusinessRuleController {
 
     private final BusinessRuleService businessRuleService;
+
     @Autowired
     public BusinessRuleController(BusinessRuleService businessRuleService) {
         this.businessRuleService = businessRuleService;
@@ -22,4 +23,31 @@ public class BusinessRuleController {
         return businessRuleService.getAllBusinessRules();
     }
 
+    @GetMapping("/{vehicleType}")
+    public ResponseEntity<List<BusinessRuleDTO>> getBusinessRulesByVehicleType(@PathVariable String vehicleType) {
+        return new ResponseEntity<>(
+                businessRuleService.getBusinessRulesByVehicleType(vehicleType), HttpStatus.OK);
+    }
+
+    @PostMapping
+    public ResponseEntity<BusinessRuleDTO> createBusinessRule(
+            @RequestBody BusinessRuleDTOWithoutId businessRuleDTOWithoutId) {
+        BusinessRuleDTO createdBusinessRuleDTO = businessRuleService
+                .saveBusinessRule(businessRuleDTOWithoutId);
+        return new ResponseEntity<>(createdBusinessRuleDTO, HttpStatus.CREATED);
+    }
+
+
+    @PutMapping("/{id}")
+    public ResponseEntity<BusinessRuleDTO> updateBusinessRule(
+            @PathVariable long id,
+            @RequestBody BusinessRuleDTOWithoutId businessRuleDTOWithoutId) {
+        BusinessRuleDTO updatedBusinessRule = businessRuleService.updateBusinessRule(id, businessRuleDTOWithoutId);
+        return new ResponseEntity<>(updatedBusinessRule, HttpStatus.OK);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteBusinessRule(@PathVariable long id){
+        return new ResponseEntity<>(businessRuleService.removeBusinessRule(id), HttpStatus.NO_CONTENT);
+    }
 }
