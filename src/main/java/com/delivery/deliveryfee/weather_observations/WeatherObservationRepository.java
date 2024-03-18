@@ -9,9 +9,9 @@ import java.util.Optional;
 @Repository
 public interface WeatherObservationRepository extends JpaRepository<WeatherObservation, Long> {
 
-    List<WeatherObservation> findWeatherObservationsByStationName(String stationName);
+    Optional<List<WeatherObservation>> findWeatherObservationsByStationName(String stationName);
 
     Optional<WeatherObservation> findTopByStationNameOrderByTimeOfObservationDesc(String stationName);
 
-    List<WeatherObservation> findTop3ByOrderByTimeOfObservationDesc();
+    Optional<List<WeatherObservation>> findTop3ByOrderByTimeOfObservationDesc();
 }

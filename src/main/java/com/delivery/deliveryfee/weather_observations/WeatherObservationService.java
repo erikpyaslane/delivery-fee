@@ -19,6 +19,7 @@ import java.net.URL;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -57,10 +58,11 @@ public class WeatherObservationService {
      */
 
     public List<WeatherObservationDTO> getLatestWeatherObservations() {
-        return weatherObservationRepository.findTop3ByOrderByTimeOfObservationDesc()
-                .stream()
+        Optional<List<WeatherObservation>> optionalWeatherObservations =  weatherObservationRepository
+                .findTop3ByOrderByTimeOfObservationDesc();
+        return optionalWeatherObservations.map(weatherObservations -> weatherObservations.stream()
                 .map(weatherObservationDTOMapper)
-                .collect(Collectors.toList());
+                .collect(Collectors.toList())).orElse(null);
     }
 
 
@@ -72,10 +74,11 @@ public class WeatherObservationService {
      */
     public List<WeatherObservationDTO> getObservationsByCityName(String cityName) {
         String stationName = stationCityMappingService.getStationNameByCityName(cityName);
-        return weatherObservationRepository.findWeatherObservationsByStationName(stationName)
-                .stream()
+        Optional<List<WeatherObservation>> optionalWeatherObservations =  weatherObservationRepository
+                .findWeatherObservationsByStationName(stationName);
+        return optionalWeatherObservations.map(weatherObservations -> weatherObservations.stream()
                 .map(weatherObservationDTOMapper)
-                .collect(Collectors.toList());
+                .collect(Collectors.toList())).orElse(null);
     }
 
     /**
@@ -157,8 +160,12 @@ public class WeatherObservationService {
         String wmoCode = element.getElementsByTagName("wmocode").item(0).getTextContent();
         String airTemperature = element.getElementsByTagName("airtemperature").item(0).getTextContent();
         String windSpeed = element.getElementsByTagName("windspeed").item(0).getTextContent();
+        if (windSpeed.isEmpty())
+                windSpeed = "0.0";
         String phenomenon = element.getElementsByTagName("phenomenon").item(0).getTextContent();
         LocalDateTime localDateTime = LocalDateTime.now();
+
+        System.out.println(name + " " + wmoCode + " " + airTemperature + " " + windSpeed + " " + phenomenon);
 
         return new WeatherObservation(name, wmoCode, Double.parseDouble(airTemperature),
                 Double.parseDouble(windSpeed), phenomenon, localDateTime);
