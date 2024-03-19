@@ -1,5 +1,6 @@
 package com.delivery.deliveryfee.business_rules;
 
+import com.delivery.deliveryfee.enums.PhenomenonType;
 import com.delivery.deliveryfee.enums.VehicleType;
 import com.delivery.deliveryfee.enums.WeatherConditionType;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -22,10 +23,14 @@ public interface BusinessRuleRepository extends JpaRepository<BusinessRule, Long
             "AND br.weatherConditionType = :weatherConditionType " +
             "AND br.minValueOfRange <= :rangeValue " +
             "AND br.maxValueOfRange >= :rangeValue")
-    BusinessRule findBusinessRuleByVehicleTypeAndWeatherConditionTypeAndRangeValue(
+    Optional<BusinessRule> findBusinessRuleByVehicleTypeAndWeatherConditionTypeAndRangeValue(
             VehicleType vehicleType, WeatherConditionType weatherConditionType, double rangeValue
     );
 
     Optional<BusinessRule> findById(long id);
+
+    Optional<BusinessRule> findBusinessRuleByVehicleTypeAndPhenomenonType (
+            VehicleType vehicleType, PhenomenonType phenomenonType);
+
 
 }

@@ -1,5 +1,6 @@
 package com.delivery.deliveryfee.business_rules;
 
+import com.delivery.deliveryfee.enums.PhenomenonType;
 import com.delivery.deliveryfee.enums.VehicleType;
 import com.delivery.deliveryfee.enums.WeatherConditionType;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,44 +43,31 @@ public class BusinessRuleService {
                 .collect(Collectors.toList());
     }
 
-    public List<BusinessRuleDTO> getBusinessRulesByWeatherConditionType(String weatherConditionType) {
-        WeatherConditionType convertedWeatherConditionType = null;
-        try {
-            convertedWeatherConditionType = WeatherConditionType.valueOf(weatherConditionType);
-        } catch (IllegalArgumentException e) {
-            System.out.println("This vehicle type does not exist!");
-        }
-        List<BusinessRule> businessRules = businessRuleRepository
-                .findBusinessRulesByWeatherConditionType(convertedWeatherConditionType);
+    public BusinessRuleDTO getBusinessRuleByVehicleTypeAndPhenomenonType(
+            VehicleType vehicleType, PhenomenonType phenomenonType) {
 
-        return businessRules.stream()
-                .map(businessRuleDTOMapper::BusinessRuleToDTO)
-                .collect(Collectors.toList());
+        Optional<BusinessRule> optionalBusinessRule = businessRuleRepository
+                .findBusinessRuleByVehicleTypeAndPhenomenonType(vehicleType, phenomenonType);
+
+        return optionalBusinessRule.map(businessRuleDTOMapper::BusinessRuleToDTO).orElse(null);
     }
-
-    public List<BusinessRuleDTO> getBusinessRulesByVehicleTypeAndWeatherConditionType(
-            VehicleType vehicleType, WeatherConditionType weatherConditionType) {
-
-        List<BusinessRule> businessRules = businessRuleRepository
-                .findBusinessRulesByVehicleTypeAndWeatherConditionType(vehicleType, weatherConditionType);
-
-        return businessRules.stream()
-                .map(businessRuleDTOMapper::BusinessRuleToDTO)
-                .collect(Collectors.toList());
-    }
-
 
     public BusinessRuleDTO getBusinessRuleByVehicleTypeAndWeatherConditionTypeAndRangeValue(
             VehicleType vehicleType, WeatherConditionType weatherConditionType, double rangeValue) {
+        Optional<BusinessRule> optionalBusinessRule = businessRuleRepository
+                .findBusinessRuleByVehicleTypeAndWeatherConditionTypeAndRangeValue(
+                vehicleType, weatherConditionType, rangeValue
+        );
 
-        return businessRuleDTOMapper.BusinessRuleToDTO(
-                businessRuleRepository.findBusinessRuleByVehicleTypeAndWeatherConditionTypeAndRangeValue(
-                        vehicleType, weatherConditionType, rangeValue
-                ));
+        return optionalBusinessRule.map(businessRuleDTOMapper::BusinessRuleToDTO).orElse(null);
     }
 
     public BusinessRuleDTO saveBusinessRule(BusinessRuleDTOWithoutId businessRuleDTOWithoutId) {
         BusinessRule businessRule = businessRuleDTOMapper.DTOToBusinessRule(businessRuleDTOWithoutId);
+        List<BusinessRule> businessRules = businessRuleRepository
+                .findBusinessRulesByVehicleTypeAndWeatherConditionType(businessRule.getVehicleType(), businessRule.getWeatherConditionType());
+        if (!businessRuleRangesAreValid(businessRules, businessRule.getMinValueOfRange(), businessRule.getMaxValueOfRange()))
+            return null;
         return businessRuleDTOMapper.BusinessRuleToDTO(
                 businessRuleRepository.save(businessRule));
     }
@@ -92,7 +80,7 @@ public class BusinessRuleService {
         BusinessRule businessRule = optionalBusinessRule.get();
 
         businessRule.setVehicleType(businessRule.getVehicleType());
-        businessRule.setMinValueOFRange(businessRuleDTOWithoutId.minValueOfRange());
+        businessRule.setMinValueOfRange(businessRuleDTOWithoutId.minValueOfRange());
         businessRule.setMaxValueOfRange(businessRuleDTOWithoutId.maxValueOfRange());
         businessRule.setExtraFeeValue(businessRuleDTOWithoutId.extraFeeValue());
         businessRule.setWeatherConditionType(businessRule.getWeatherConditionType());
@@ -107,6 +95,18 @@ public class BusinessRuleService {
             return "Business rule with id = " + id + " doesn't exist";
         businessRuleRepository.delete(optionalBusinessRule.get());
         return "Business rule deleted successfully";
+    }
+
+    private boolean businessRuleRangesAreValid(List<BusinessRule> businessRules, double rangeMin, double rangeMax) {
+        if (rangeMin > rangeMax)
+            return false;
+
+        for (BusinessRule businessRule : businessRules) {
+            if ((businessRule.getMinValueOfRange() >= rangeMin && businessRule.getMinValueOfRange() <= rangeMax)||
+                    (businessRule.getMaxValueOfRange() >= rangeMin && businessRule.getMaxValueOfRange() <= rangeMax))
+                return false;
+        }
+        return true;
     }
 
 }

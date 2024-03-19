@@ -34,6 +34,8 @@ public class BusinessRuleController {
             @RequestBody BusinessRuleDTOWithoutId businessRuleDTOWithoutId) {
         BusinessRuleDTO createdBusinessRuleDTO = businessRuleService
                 .saveBusinessRule(businessRuleDTOWithoutId);
+        if (createdBusinessRuleDTO == null)
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         return new ResponseEntity<>(createdBusinessRuleDTO, HttpStatus.CREATED);
     }
 

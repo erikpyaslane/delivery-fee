@@ -17,9 +17,9 @@ public class BusinessRule {
     private VehicleType vehicleType;
 
     @Column(name="min_value")
-    private double minValueOfRange;
+    private Double minValueOfRange;
     @Column(name="max_value")
-    private double maxValueOfRange;
+    private Double maxValueOfRange;
     @Column(name="extra_fee_value")
     @NotNull
     private double extraFeeValue;
@@ -34,18 +34,7 @@ public class BusinessRule {
     public BusinessRule() {
     }
 
-    public BusinessRule(VehicleType vehicleType, WeatherConditionType weatherConditionType,
-                        double minValueOfRange, double maxValueOfRange, double extraFeeValue) {
-        this.vehicleType = vehicleType;
-        this.weatherConditionType = weatherConditionType;
-        this.minValueOfRange = minValueOfRange;
-        this.maxValueOfRange = maxValueOfRange;
-        this.extraFeeValue = extraFeeValue;
-    }
-
-    public BusinessRule(VehicleType vehicleType, double minValueOfRange, double maxValueOfRange,
-                        double extraFeeValue, WeatherConditionType weatherConditionType,
-                        PhenomenonType phenomenonType) {
+    public BusinessRule(VehicleType vehicleType, Double minValueOfRange, Double maxValueOfRange, double extraFeeValue, WeatherConditionType weatherConditionType, PhenomenonType phenomenonType) {
         this.vehicleType = vehicleType;
         this.minValueOfRange = minValueOfRange;
         this.maxValueOfRange = maxValueOfRange;
@@ -58,6 +47,10 @@ public class BusinessRule {
         return id;
     }
 
+    public void setId(long id) {
+        this.id = id;
+    }
+
     public VehicleType getVehicleType() {
         return vehicleType;
     }
@@ -66,19 +59,19 @@ public class BusinessRule {
         this.vehicleType = vehicleType;
     }
 
-    public double getMinValueOFRange() {
+    public Double getMinValueOfRange() {
         return minValueOfRange;
     }
 
-    public void setMinValueOFRange(double minValueOfRange) {
+    public void setMinValueOfRange(Double minValueOfRange) {
         this.minValueOfRange = minValueOfRange;
     }
 
-    public double getMaxValueOfRange() {
+    public Double getMaxValueOfRange() {
         return maxValueOfRange;
     }
 
-    public void setMaxValueOfRange(double maxValueOfRange) {
+    public void setMaxValueOfRange(Double maxValueOfRange) {
         this.maxValueOfRange = maxValueOfRange;
     }
 
@@ -98,24 +91,11 @@ public class BusinessRule {
         this.weatherConditionType = weatherConditionType;
     }
 
-    public double getMinValueOfRange() {
-        return minValueOfRange;
-    }
-
-    public void setMinValueOfRange(double minValueOfRange) {
-        this.minValueOfRange = minValueOfRange;
-    }
-
     public PhenomenonType getPhenomenonType() {
         return phenomenonType;
     }
 
     public void setPhenomenonType(PhenomenonType phenomenonType) {
-        // Implement conditional logic here
-        if (this.weatherConditionType == WeatherConditionType.WPEF) {
-            this.phenomenonType = phenomenonType;
-        } else {
-            this.phenomenonType = null;
-        }
+        this.phenomenonType = phenomenonType;
     }
 }

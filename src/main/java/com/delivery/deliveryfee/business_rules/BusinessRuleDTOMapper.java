@@ -9,7 +9,7 @@ public class BusinessRuleDTOMapper {
         return new BusinessRuleDTO(
                 businessRule.getId(),
                 businessRule.getVehicleType(),
-                businessRule.getMinValueOFRange(),
+                businessRule.getMinValueOfRange(),
                 businessRule.getMaxValueOfRange(),
                 businessRule.getExtraFeeValue(),
                 businessRule.getWeatherConditionType(),
