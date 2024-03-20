@@ -1,14 +1,15 @@
 package com.delivery.deliveryfee.exceptions;
 
-public class NoUsageAllowedException extends IllegalArgumentException {
+public class InvalidCityNameException extends IllegalArgumentException {
+
     private final String message;
 
-    public NoUsageAllowedException(String message) {
+    public InvalidCityNameException(String message) {
         this.message = message;
     }
 
     @Override
     public String getMessage() {
-        return message;
+        return this.message;
     }
 }

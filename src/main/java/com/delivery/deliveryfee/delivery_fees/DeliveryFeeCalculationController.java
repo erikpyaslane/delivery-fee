@@ -31,7 +31,7 @@ public class DeliveryFeeCalculationController {
     @GetMapping("")
     public ResponseEntity<String> getDeliveryFee(@RequestParam("cityName") String cityName,
                                          @RequestParam("vehicleType") String vehicleType,
-                                                 @RequestParam (required = false) String localDateTime) {
+                                                 @RequestParam(value="timestamp", required = false) String localDateTime) {
         System.out.println(cityName);
         System.out.println(vehicleType);
         System.out.println(localDateTime);
@@ -47,7 +47,7 @@ public class DeliveryFeeCalculationController {
      * @example /delivery_fees/all
      */
     @GetMapping("/all")
-    public List<RegionalBaseFee> getDeliveryFee() {
+    public List<RegionalBaseFee> getRegionalBaseFees() {
         return deliveryFeeCalculationService.getRegionalBaseFees();
     }
 

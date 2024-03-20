@@ -29,4 +29,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Object> handleDateTimeParseException(DateTimeParseException e){
         return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
     }
+
+    @ExceptionHandler(WeatherObservationNotFoundException.class)
+    public ResponseEntity<Object> handleWeatherObservationNotFoundException(WeatherObservationNotFoundException e) {
+        return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(InvalidCityNameException.class)
+    public ResponseEntity<Object> handleInvalidCityNameException(InvalidCityNameException e) {
+        return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+    }
 }

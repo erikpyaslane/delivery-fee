@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Delivery Fee Calculator</title>
+    <style>
+        /* Additional inline styles for demonstration purpose */
+        .form-window {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin-top: -50px; /* Adjust as needed */
+        }
+
+        .form-container {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-container label {
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .form-container input[type="text"] {
+            width: 300px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+
+        .form-container button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .form-container button:hover {
+            background-color: #0056b3;
+        }
+
+        #deliveryFeeResult {
+            margin-top: 20px;
+            font-size: 50px;
+        }
+    </style>
+</head>
+<body>
+<div class="form-window">
+    <div class="form-container">
+        <h1>Delivery Fee Calculator</h1>
+        <div>
+            <label for="cityName">City Name:</label>
+            <input type="text" id="cityName" name="cityName">
+        </div>
+        <div>
+            <label for="vehicleType">Vehicle Type:</label>
+            <input type="text" id="vehicleType" name="vehicleType">
+        </div>
+        <div>
+            <label for="timestamp">Timestamp (ex. 2024-03-20T15:00:00)</label>
+            <input type="text" id="timestamp" name="timestamp">
+        </div>
+        <button id="calculateButton">Calculate Delivery Fee</button>
+    </div>
+    <div style="margin-top: 20px"><h1 id="deliveryFeeResult"></h1></div>
+</div>
+<script>
+    document.getElementById('calculateButton').addEventListener('click', function() {
+        let cityName = document.getElementById('cityName').value;
+        let vehicleType = document.getElementById('vehicleType').value;
+        let timestamp = document.getElementById('timestamp').value;
+        let url = '/api/delivery_fees?cityName=' + encodeURIComponent(cityName)
+            + '&vehicleType=' + encodeURIComponent(vehicleType)
+            + '&timestamp=' + encodeURIComponent(timestamp);
+
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', url, true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    document.getElementById('deliveryFeeResult').textContent = xhr.responseText;
+                } else {
+                    document.getElementById('deliveryFeeResult').textContent = 'Error: ' + xhr.responseText;
+                }
+            }
+        };
+        xhr.send();
+    });
+</script>
+</body>
+</html>

@@ -6,9 +6,15 @@ import com.delivery.deliveryfee.business_rules.BusinessRuleService;
 import com.delivery.deliveryfee.enums.PhenomenonType;
 import com.delivery.deliveryfee.enums.VehicleType;
 import com.delivery.deliveryfee.enums.WeatherConditionType;
+import com.delivery.deliveryfee.exceptions.InvalidCityNameException;
 import com.delivery.deliveryfee.exceptions.NoUsageAllowedException;
+import com.delivery.deliveryfee.exceptions.WeatherObservationNotFoundException;
+import com.delivery.deliveryfee.station_city_mapping.StationCityMappingRepository;
+import com.delivery.deliveryfee.station_city_mapping.StationCityMappingService;
 import com.delivery.deliveryfee.weather_observations.WeatherObservationDTO;
 import com.delivery.deliveryfee.weather_observations.WeatherObservationService;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,18 +29,24 @@ import java.util.Optional;
 @Service
 public class DeliveryFeeCalculationService {
 
+    private static final Logger logger = LogManager.getLogger(DeliveryFeeCalculationService.class);
+
     private final WeatherObservationService weatherObservationService;
     private final BusinessRuleService businessRuleService;
     private final RegionalBaseFeeRepository regionalBaseFeeRepository;
 
+    private final StationCityMappingService stationCityMappingService;
+
     @Autowired
     public DeliveryFeeCalculationService(WeatherObservationService weatherObservationService,
                                          BusinessRuleService businessRuleService,
-                                         RegionalBaseFeeRepository regionalBaseFeeRepository
+                                         RegionalBaseFeeRepository regionalBaseFeeRepository,
+                                         StationCityMappingService stationCityMappingService
     ) {
         this.weatherObservationService = weatherObservationService;
         this.businessRuleService = businessRuleService;
         this.regionalBaseFeeRepository = regionalBaseFeeRepository;
+        this.stationCityMappingService = stationCityMappingService;
     }
 
     /**
@@ -57,12 +69,22 @@ public class DeliveryFeeCalculationService {
 
         VehicleType convertedVehicleType;
         double totalFee;
-        LocalDateTime convertedDateTime;
 
         try {
-            convertedDateTime = converLocalDateTime(localDateTime);
+            if (cityName == null || cityName.isEmpty() ||
+            !stationCityMappingService.existsCityName(cityName))
+                throw new InvalidCityNameException("Invalid city input!");
+
+            LocalDateTime convertedDateTime = converLocalDateTime(localDateTime);
+            logger.info("Converted date: " + convertedDateTime);
+
             convertedVehicleType = VehicleType.valueOf(vehicleType.toUpperCase());
             totalFee = calculateTotalFee(cityName, convertedVehicleType, convertedDateTime);
+        } catch (InvalidCityNameException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        } catch (NullPointerException e) {
+            return new ResponseEntity<>(
+                    "There is no weather observation at this time", HttpStatus.NOT_FOUND);
         } catch (NoUsageAllowedException e) {
             throw new NoUsageAllowedException("Usage of selected vehicle type is forbidden");
         } catch (DateTimeParseException e) {
@@ -70,16 +92,15 @@ public class DeliveryFeeCalculationService {
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("No such vehicle type exist");
         }
-
-        System.out.println("Vehicle type: " + convertedVehicleType);
+        logger.info("Delivery fee was successfully calculated!");
         return new ResponseEntity<>("Delivery fee : " + totalFee, HttpStatus.OK);
     }
 
     private LocalDateTime converLocalDateTime(String stringDateTime) throws DateTimeParseException {
         if (stringDateTime.isEmpty())
             return null;
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
-        return LocalDateTime.parse(stringDateTime, formatter);
+        return LocalDateTime.parse(
+                stringDateTime, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"));
     }
 
     /**
@@ -92,7 +113,7 @@ public class DeliveryFeeCalculationService {
      * @throws NoUsageAllowedException if phenomenon type  forbids delivery on target vehicle
      */
     public double calculateTotalFee(String cityName, VehicleType vehicleType, LocalDateTime localDateTime)
-            throws NoUsageAllowedException {
+            throws NoUsageAllowedException, NullPointerException {
 
         WeatherObservationDTO weatherObservation;
         if (localDateTime == null)
@@ -103,7 +124,9 @@ public class DeliveryFeeCalculationService {
                     .getWeatherObservationByCityNameAndTimeOfObservation(cityName, localDateTime);
         double totalFee = 0.0;
         totalFee += calculateRBF(cityName, vehicleType);
-        System.out.println("RBF: " + totalFee);
+        logger.info("RBF: " + totalFee);
+        if (weatherObservation == null)
+            throw new WeatherObservationNotFoundException("There are no any weather observation in target city!");
         totalFee += calculateExtraFee(weatherObservation, vehicleType);
         return totalFee;
     }
@@ -122,15 +145,18 @@ public class DeliveryFeeCalculationService {
     private double calculateExtraFee (WeatherObservationDTO weatherObservation, VehicleType vehicleType)
             throws NoUsageAllowedException {
 
-        double totalExtraFee = 0;
-        System.out.println("Phenomenon type: " + weatherObservation.weatherPhenomenon());
-        totalExtraFee += calculateATEF(weatherObservation.airTemperature(), vehicleType);
-        totalExtraFee += calculateWSEF(weatherObservation.windSpeed(), vehicleType);
-        totalExtraFee += calculateWPEF(
+        double ATEF = calculateATEF(weatherObservation.airTemperature(), vehicleType);
+        double WSEF = calculateWSEF(weatherObservation.windSpeed(), vehicleType);
+        double WPEF = calculateWPEF(
                 vehicleType, PhenomenonType.getPhenomenonType(weatherObservation.weatherPhenomenon())
         );
+        logger.info(
+                "\nATEF: " + ATEF + " (Air temperature:" + weatherObservation.airTemperature() + ")\n"
+                + "WSEF: " + WSEF + " (Wind speed:" + weatherObservation.windSpeed() + ")'\n"
+                + "WPEF: " + WPEF + " (Phenomenon:" + weatherObservation.weatherPhenomenon() + ")\n"
+                + "Time of observation: " + weatherObservation.timeOfObservation());
 
-        return totalExtraFee;
+        return ATEF + WSEF + WPEF;
     }
 
     private double calculateATEF(double air, VehicleType vehicleType) {
@@ -138,12 +164,9 @@ public class DeliveryFeeCalculationService {
         businessRuleDTO = businessRuleService
                 .getBusinessRuleByVehicleTypeAndWeatherConditionTypeAndRangeValue(
                         vehicleType, WeatherConditionType.ATEF, air);
-        System.out.println("Air temperature: " + air);
         if (businessRuleDTO == null){
-            System.out.println("ATEF: " + 0.0);
             return 0.0;
         }
-        System.out.println("ATEF: " + businessRuleDTO.extraFeeValue());
         return businessRuleDTO.extraFeeValue();
     }
 
@@ -152,17 +175,13 @@ public class DeliveryFeeCalculationService {
         businessRuleDTO = businessRuleService
                 .getBusinessRuleByVehicleTypeAndWeatherConditionTypeAndRangeValue(
                         vehicleType, WeatherConditionType.WSEF, wind);
-        System.out.println("Wind speed: " + wind);
         if (businessRuleDTO == null){
-            System.out.println("WSEF: " + 0.0);
             return 0.0;
         }
-        System.out.println("WSEF: " + businessRuleDTO.extraFeeValue());
         return businessRuleDTO.extraFeeValue();
     }
 
     private double calculateWPEF(VehicleType vehicleType, PhenomenonType phenomenonType) throws NoUsageAllowedException {
-        System.out.println("Phenomenon type: " + phenomenonType);
         if (phenomenonType == PhenomenonType.NOPE){
             return 0.0;
         }
@@ -170,10 +189,8 @@ public class DeliveryFeeCalculationService {
         businessRuleDTO = businessRuleService
                 .getBusinessRuleByVehicleTypeAndPhenomenonType(vehicleType, phenomenonType);
         if (businessRuleDTO == null){
-            System.out.println("WPEF: " + 0.0);
             return 0.0;
         }
-        System.out.println("WPEF: " + businessRuleDTO.extraFeeValue());
         if (businessRuleDTO.extraFeeValue() == -1.0)
             throw new NoUsageAllowedException("Usage of selected vehicle type is forbidden");
         return businessRuleDTO.extraFeeValue();
@@ -203,6 +220,7 @@ public class DeliveryFeeCalculationService {
 
         regionalBaseFee.setBaseFeeValue(updatedDetails.baseFeeValue());
         regionalBaseFeeRepository.save(regionalBaseFee);
+        logger.info("Regional Base Fee was successfully updated!");
         return new ResponseEntity<>("Regional Base Fee was successfully updated!", HttpStatus.OK);
     }
 }

@@ -13,7 +13,6 @@ public class StationCityMappingService {
         this.stationCityMappingRepository = stationCityMappingRepository;
     }
 
-
     /**
      * Gets station name by city name
      *
@@ -42,6 +41,16 @@ public class StationCityMappingService {
      */
     public boolean existsStationName(String stationName) {
         return stationCityMappingRepository.existsByStationName(stationName);
+    }
+
+    /**
+     * Returns true if city exist in db table, otherwise false
+     *
+     * @param cityName name of station
+     * @return true/false depending on existence of city
+     */
+    public boolean existsCityName(String cityName) {
+        return stationCityMappingRepository.existsByCityName(cityName);
     }
 
 }

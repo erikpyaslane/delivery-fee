@@ -17,4 +17,8 @@ public interface StationCityMappingRepository extends JpaRepository<StationCityM
             " scm.stationName = :stationName) THEN TRUE ELSE FALSE END")
     boolean existsByStationName(String stationName);
 
+    @Query("SELECT CASE WHEN EXISTS (SELECT 1 FROM StationCityMapping scm WHERE" +
+            " scm.cityName = :cityName) THEN TRUE ELSE FALSE END")
+    boolean existsByCityName(String cityName);
+
 }

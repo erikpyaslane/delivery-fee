@@ -1,5 +1,6 @@
 package com.delivery.deliveryfee.weather_observations;
 
+import com.delivery.deliveryfee.exceptions.WeatherObservationNotFoundException;
 import com.delivery.deliveryfee.station_city_mapping.StationCityMappingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -89,11 +90,11 @@ public class WeatherObservationService {
      * @param cityName name of city
      * @return list of WeatherObservation objects
      */
-    public WeatherObservationDTO getLatestObservationByCityName(String cityName) {
+    public WeatherObservationDTO getLatestObservationByCityName(String cityName) throws NullPointerException{
         String stationName = stationCityMappingService.getStationNameByCityName(cityName);
         return weatherObservationRepository.findTopByStationNameOrderByTimeOfObservationDesc(stationName)
                 .map(weatherObservationDTOMapper)
-                .orElseThrow();
+                .orElseThrow(null);
     }
 
     /**
@@ -105,12 +106,12 @@ public class WeatherObservationService {
      */
     public WeatherObservationDTO getWeatherObservationByCityNameAndTimeOfObservation(
             String cityName, LocalDateTime localDateTime
-    ) {
+    ) throws NullPointerException{
         String stationName = stationCityMappingService.getStationNameByCityName(cityName);
         return weatherObservationRepository
                 .findTopByStationNameAndTimeOfObservationIsBeforeOrderByTimeOfObservationDesc(
                         stationName, localDateTime)
-                .map(weatherObservationDTOMapper).orElseThrow();
+                .map(weatherObservationDTOMapper).orElseThrow(null);
     }
 
     /**
