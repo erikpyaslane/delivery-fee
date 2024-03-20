@@ -1,12 +1,13 @@
 package com.delivery.deliveryfee.delivery_fees;
 
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/delivery_fees")
@@ -18,31 +19,48 @@ public class DeliveryFeeCalculationController {
         this.deliveryFeeCalculationService = deliveryFeeCalculationService;
     }
 
+    /**
+     * Calculates delivery fee by request parameters
+     *
+     * @param cityName name of city
+     * @param vehicleType type of vehicle
+     *
+     * @return response message with calculated delivery fee
+     * @example GET /api/delivery_fees?cityName=Tartu&vehicleType=SCOOTER
+     */
     @GetMapping("")
-    public String getDeliveryFee(@RequestParam("cityName") String cityName,
-                                 @RequestParam("vehicleType") String vehicleType) {
+    public ResponseEntity<String> getDeliveryFee(@RequestParam("cityName") String cityName,
+                                         @RequestParam("vehicleType") String vehicleType,
+                                                 @RequestParam (required = false) String localDateTime) {
         System.out.println(cityName);
         System.out.println(vehicleType);
-        return "Delivery_fee: " + deliveryFeeCalculationService.getCalculationFee(cityName, vehicleType);
+        System.out.println(localDateTime);
+        return deliveryFeeCalculationService.getCalculationFee(
+                cityName, vehicleType, Objects.requireNonNullElse(localDateTime, "")
+        );
     }
 
+    /**
+     * Retrieves all RBFs
+     *
+     * @return list of regional base fees
+     * @example /delivery_fees/all
+     */
     @GetMapping("/all")
     public List<RegionalBaseFee> getDeliveryFee() {
         return deliveryFeeCalculationService.getRegionalBaseFees();
     }
 
-    /*
-    @GetMapping("/base_fee/{cityName}")
-    public List<RegionalBaseFeeDTO> getRegionalBaseFee(@PathVariable String cityName) {
-        return deliveryFeeCalculationService.getRGBsByCityName(cityName);
+    /**
+     * Updates regional base fee
+     *
+     * @param id The ID of regional base fee object
+     * @param regionalBaseFee the updated regional base fee DTO
+     * @return updated regional base fee with HTTP status
+     */
+    @PutMapping("/{id}")
+    ResponseEntity<String> updateRegionalBaseFeeOfCity(
+            @PathVariable long id, @RequestBody RegionalBaseFeeDTOWithoutId regionalBaseFee) {
+        return deliveryFeeCalculationService.updateRegionalBaseFee(id, regionalBaseFee);
     }
-
-
-
-    @PutMapping
-    @ResponseStatus(HttpStatus.OK)
-    void updateRBFofCity(@Valid @RequestBody RegionalBaseFee regionalBaseFee) {
-        deliveryFeeCalculationService.updateRBF(regionalBaseFee);
-    }
- */
 }

@@ -16,31 +16,44 @@ public class WeatherObservationController {
         this.weatherObservationService = weatherObservationService;
     }
 
+    /**
+     * Retrieves all weather observations
+     *
+     * @return list of weather observations
+     */
     @GetMapping
     public List<WeatherObservationDTO> getAllWeatherObservations() {
         return weatherObservationService.getAllWeatherObservations();
     }
-
+    /**
+     * Retrieves latest weather observations
+     *
+     * @return list of weather observations
+     */
     @GetMapping("/latest")
     public List<WeatherObservationDTO> getLatestWeatherObservations() {
         return weatherObservationService.getLatestWeatherObservations();
     }
 
+    /**
+     * Retrieves all weather observations of city
+     *
+     * @param cityName target city name
+     * @return list of weather observations of target city
+     */
     @GetMapping("/{cityName}")
     public List<WeatherObservationDTO> getWeatherObservationsByCityName(@PathVariable String cityName) {
-        System.out.println(cityName);
         return weatherObservationService.getObservationsByCityName(cityName);
     }
 
+    /**
+     * Retrieves latest weather observation of city
+     *
+     * @return Weather observation Entity DTO
+     */
     @GetMapping("/{cityName}/latest")
     public WeatherObservationDTO getWeatherObservationByCityName(@PathVariable String cityName) {
         System.out.println(cityName);
         return weatherObservationService.getLatestObservationByCityName(cityName);
-    }
-
-    @GetMapping("/update")
-    public String update() {
-        weatherObservationService.updateWeatherData();
-        return "Weather updated!";
     }
 }

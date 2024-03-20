@@ -1,10 +1,9 @@
 package com.delivery.deliveryfee.exceptions;
 
-public class RecourceNotFoundException extends Exception{
-
+public class NoUsageAllowedException extends IllegalArgumentException{
     private final String message;
 
-    public RecourceNotFoundException(String message) {
+    public NoUsageAllowedException(String message) {
         this.message = message;
     }
 

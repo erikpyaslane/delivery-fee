@@ -1,10 +1,9 @@
 package com.delivery.deliveryfee.exceptions;
 
-public class NoSuchVehicleTypeException extends IllegalArgumentException {
-
+public class WrongWeatherConditionRangeException extends IllegalArgumentException{
     private final String message;
 
-    public NoSuchVehicleTypeException(String message) {
+    public WrongWeatherConditionRangeException(String message) {
         this.message = message;
     }
 

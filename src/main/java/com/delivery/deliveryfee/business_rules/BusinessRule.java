@@ -47,10 +47,6 @@ public class BusinessRule {
         return id;
     }
 
-    public void setId(long id) {
-        this.id = id;
-    }
-
     public VehicleType getVehicleType() {
         return vehicleType;
     }

@@ -2,6 +2,8 @@ package com.delivery.deliveryfee.weather_observations;
 
 import com.delivery.deliveryfee.station_city_mapping.StationCityMappingService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
@@ -28,7 +30,7 @@ public class WeatherObservationService {
     private final WeatherObservationRepository weatherObservationRepository;
     private final WeatherObservationDTOMapper weatherObservationDTOMapper;
     private final StationCityMappingService stationCityMappingService;
-    private static String url = "https://www.ilmateenistus.ee/ilma_andmed/xml/observations.php";
+    private static final String url = "https://www.ilmateenistus.ee/ilma_andmed/xml/observations.php";
 
     @Autowired
     public WeatherObservationService(WeatherObservationRepository weatherObservationRepository,
@@ -95,6 +97,23 @@ public class WeatherObservationService {
     }
 
     /**
+     * Gets weather observation by city name and observation time
+     *
+     * @param cityName name of target city
+     * @param localDateTime datetime of observation
+     * @return weather observation that is actual for observation time
+     */
+    public WeatherObservationDTO getWeatherObservationByCityNameAndTimeOfObservation(
+            String cityName, LocalDateTime localDateTime
+    ) {
+        String stationName = stationCityMappingService.getStationNameByCityName(cityName);
+        return weatherObservationRepository
+                .findTopByStationNameAndTimeOfObservationIsBeforeOrderByTimeOfObservationDesc(
+                        stationName, localDateTime)
+                .map(weatherObservationDTOMapper).orElseThrow();
+    }
+
+    /**
      * Method, which saves WeatherObservation object to database
      *
      * @param weatherObservation object to save
@@ -115,7 +134,7 @@ public class WeatherObservationService {
 
     /**
      * Method, which processes weather observations data
-     * Automatically every hour at HH:15
+     * Automatically every hour at HH:15:00
      */
     @Scheduled(cron = "0 15 * * * ?")
     public void updateWeatherData() {
@@ -174,10 +193,5 @@ public class WeatherObservationService {
     private boolean isValidStation(String stationName) {
         return stationCityMappingService.existsStationName(stationName);
     }
-
-    public void setUrl(String url) {
-        WeatherObservationService.url = url;
-    }
-
 
 }

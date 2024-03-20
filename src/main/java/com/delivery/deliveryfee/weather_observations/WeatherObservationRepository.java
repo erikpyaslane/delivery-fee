@@ -3,6 +3,7 @@ package com.delivery.deliveryfee.weather_observations;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,4 +15,8 @@ public interface WeatherObservationRepository extends JpaRepository<WeatherObser
     Optional<WeatherObservation> findTopByStationNameOrderByTimeOfObservationDesc(String stationName);
 
     Optional<List<WeatherObservation>> findTop3ByOrderByTimeOfObservationDesc();
+
+    Optional<WeatherObservation> findTopByStationNameAndTimeOfObservationIsBeforeOrderByTimeOfObservationDesc(
+            String stationName, LocalDateTime localDateTime
+    );
 }

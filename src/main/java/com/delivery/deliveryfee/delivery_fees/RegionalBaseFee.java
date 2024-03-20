@@ -20,7 +20,6 @@ public class RegionalBaseFee {
     private String cityName;
     @Enumerated(EnumType.STRING)
     @Column(name = "vehicle_type")
-    @NotEmpty
     @NotNull
     private VehicleType vehicleType;
     @Column(name = "base_fee_value")
