@@ -1,7 +1,10 @@
 package com.delivery.deliveryfee.weather_observations;
 
+import com.delivery.deliveryfee.business_rules.BusinessRuleService;
 import com.delivery.deliveryfee.exceptions.WeatherObservationNotFoundException;
 import com.delivery.deliveryfee.station_city_mapping.StationCityMappingService;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +30,9 @@ import java.util.stream.Collectors;
 
 @Service
 public class WeatherObservationService {
+
+
+    private static final Logger logger = LogManager.getLogger(BusinessRuleService.class);
 
     private final WeatherObservationRepository weatherObservationRepository;
     private final WeatherObservationDTOMapper weatherObservationDTOMapper;
@@ -143,6 +149,7 @@ public class WeatherObservationService {
         try {
             NodeList stationList = fetchStationDataFromXML();
             List<WeatherObservation> weatherObservations = extractValidObservations(stationList);
+            logger.info("Weather data was updated!");
             saveWeatherObservations(weatherObservations);
 
         } catch (ParserConfigurationException | SAXException | IOException e) {

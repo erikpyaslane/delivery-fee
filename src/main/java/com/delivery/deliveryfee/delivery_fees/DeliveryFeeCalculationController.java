@@ -1,8 +1,6 @@
 package com.delivery.deliveryfee.delivery_fees;
 
-import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,11 +28,8 @@ public class DeliveryFeeCalculationController {
      */
     @GetMapping("")
     public ResponseEntity<String> getDeliveryFee(@RequestParam("cityName") String cityName,
-                                         @RequestParam("vehicleType") String vehicleType,
+                                                 @RequestParam("vehicleType") String vehicleType,
                                                  @RequestParam(value="timestamp", required = false) String localDateTime) {
-        System.out.println(cityName);
-        System.out.println(vehicleType);
-        System.out.println(localDateTime);
         return deliveryFeeCalculationService.getCalculationFee(
                 cityName, vehicleType, Objects.requireNonNullElse(localDateTime, "")
         );

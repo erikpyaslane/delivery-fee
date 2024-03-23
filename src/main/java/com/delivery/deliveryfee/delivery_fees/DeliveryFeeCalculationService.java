@@ -9,7 +9,6 @@ import com.delivery.deliveryfee.enums.WeatherConditionType;
 import com.delivery.deliveryfee.exceptions.InvalidCityNameException;
 import com.delivery.deliveryfee.exceptions.NoUsageAllowedException;
 import com.delivery.deliveryfee.exceptions.WeatherObservationNotFoundException;
-import com.delivery.deliveryfee.station_city_mapping.StationCityMappingRepository;
 import com.delivery.deliveryfee.station_city_mapping.StationCityMappingService;
 import com.delivery.deliveryfee.weather_observations.WeatherObservationDTO;
 import com.delivery.deliveryfee.weather_observations.WeatherObservationService;
@@ -80,6 +79,8 @@ public class DeliveryFeeCalculationService {
 
             convertedVehicleType = VehicleType.valueOf(vehicleType.toUpperCase());
             totalFee = calculateTotalFee(cityName, convertedVehicleType, convertedDateTime);
+            logger.info("Delivery fee was successfully calculated!");
+
         } catch (InvalidCityNameException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         } catch (NullPointerException e) {
@@ -92,7 +93,7 @@ public class DeliveryFeeCalculationService {
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("No such vehicle type exist");
         }
-        logger.info("Delivery fee was successfully calculated!");
+
         return new ResponseEntity<>("Delivery fee : " + totalFee, HttpStatus.OK);
     }
 
@@ -151,9 +152,9 @@ public class DeliveryFeeCalculationService {
                 vehicleType, PhenomenonType.getPhenomenonType(weatherObservation.weatherPhenomenon())
         );
         logger.info(
-                "\nATEF: " + ATEF + " (Air temperature:" + weatherObservation.airTemperature() + ")\n"
-                + "WSEF: " + WSEF + " (Wind speed:" + weatherObservation.windSpeed() + ")'\n"
-                + "WPEF: " + WPEF + " (Phenomenon:" + weatherObservation.weatherPhenomenon() + ")\n"
+                "\nATEF: " + ATEF + " (Air temperature: " + weatherObservation.airTemperature() + ")\n"
+                + "WSEF: " + WSEF + " (Wind speed: " + weatherObservation.windSpeed() + ")\n"
+                + "WPEF: " + WPEF + " (Phenomenon: " + weatherObservation.weatherPhenomenon() + ")\n"
                 + "Time of observation: " + weatherObservation.timeOfObservation());
 
         return ATEF + WSEF + WPEF;

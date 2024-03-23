@@ -37,10 +37,15 @@ public class WeatherObservationRepositoryTest {
         );
         WeatherObservation wo4 = new WeatherObservation(
                 "Tallinn-Harku", "26038", 2.1,
-                1.5,"", now.plusHours(1)
+                1.5,"", now.minusHours(1)
+        );
+        WeatherObservation wo5 = new WeatherObservation(
+                "Tallinn-Harku", "26038", 3.1,
+                3.0,"", now.minusDays(1)
         );
 
-        List<WeatherObservation> weatherObservations = new ArrayList<>(List.of(wo1, wo2, wo3, wo4));
+        List<WeatherObservation> weatherObservations = new ArrayList<>(
+                List.of(wo1, wo2, wo3, wo4, wo5));
         System.out.println(List.of(weatherObservations));
         weatherObservationRepository.saveAll(weatherObservations);
     }
@@ -59,6 +64,19 @@ public class WeatherObservationRepositoryTest {
         assert (weatherObservation.get().getStationName().equals(station));
         assert (weatherObservation.get().getAirTemperature() == 2.1);
         assert (weatherObservation.get().getWindSpeed() == 1.5);
+    }
+
+    @Test
+    void testWeatherObservationByCityNameAndTimestamp(){
+        LocalDateTime dateTime = LocalDateTime.now();
+        String station = "Tartu";
+
+        Optional<WeatherObservation> weatherObservation = weatherObservationRepository
+                .findTopByStationNameAndTimeOfObservationIsBeforeOrderByTimeOfObservationDesc(station, dateTime);
+
+        assert weatherObservation.isPresent();
+        //assert (weatherObservation.get().getAirTemperature());
+
     }
 
 }

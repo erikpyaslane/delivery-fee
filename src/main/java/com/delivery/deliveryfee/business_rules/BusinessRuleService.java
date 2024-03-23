@@ -1,9 +1,12 @@
 package com.delivery.deliveryfee.business_rules;
 
+import com.delivery.deliveryfee.delivery_fees.DeliveryFeeCalculationService;
 import com.delivery.deliveryfee.enums.PhenomenonType;
 import com.delivery.deliveryfee.enums.VehicleType;
 import com.delivery.deliveryfee.enums.WeatherConditionType;
 import com.delivery.deliveryfee.exceptions.WrongWeatherConditionRangeException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +18,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class BusinessRuleService {
+
+    private static final Logger logger = LogManager.getLogger(BusinessRuleService.class);
 
     private final BusinessRuleRepository businessRuleRepository;
     private final BusinessRuleDTOMapper businessRuleDTOMapper;
@@ -86,12 +91,22 @@ public class BusinessRuleService {
                         businessRule.getVehicleType(), businessRule.getWeatherConditionType());
 
         try {
-            if (businessRuleRangesAreValid(businessRules, businessRuleDTOWithoutId.weatherConditionType(),
-                    businessRule.getMinValueOfRange(), businessRule.getMaxValueOfRange()))
+            if (businessRules.isEmpty())
                 return businessRuleDTOMapper.BusinessRuleToDTO(
                         businessRuleRepository.save(businessRule));
+            else if (businessRuleRangesAreValid(businessRules, businessRuleDTOWithoutId.weatherConditionType(),
+                    businessRule.getMinValueOfRange(), businessRule.getMaxValueOfRange())){
+                if ((businessRule.getMaxValueOfRange() == null || businessRule.getMinValueOfRange() == null)
+                        && businessRule.getWeatherConditionType() != WeatherConditionType.WPEF)
+                    businessRule = overlapBusinessRules(businessRules, businessRule);
+                if (businessRule == null)
+                    throw new WrongWeatherConditionRangeException(
+                            "There is already exist a business rule that crosses current range!");
+                return businessRuleDTOMapper.BusinessRuleToDTO(
+                        businessRuleRepository.save(businessRule));
+            }
         } catch (WrongWeatherConditionRangeException e) {
-            System.out.println(e.getMessage());
+            logger.info(e.getMessage());
         }
         return null;
     }
@@ -101,7 +116,7 @@ public class BusinessRuleService {
      *
      * @param id The ID of target business rule
      * @param businessRuleDTOWithoutId DTO of business rule with updated data
-     * @return DTO of updated business rule or null if upodaing failed
+     * @return DTO of updated business rule or null if updating failed
      */
     public BusinessRuleDTO updateBusinessRule(long id, BusinessRuleDTOWithoutId businessRuleDTOWithoutId) {
         Optional<BusinessRule> optionalBusinessRule = businessRuleRepository.findById(id);
@@ -117,6 +132,7 @@ public class BusinessRuleService {
         businessRule.setWeatherConditionType(businessRule.getWeatherConditionType());
         businessRule.setPhenomenonType(businessRule.getPhenomenonType());
 
+        logger.info("Business rule updated!");
         return businessRuleDTOMapper.BusinessRuleToDTO(businessRuleRepository.save(businessRule));
     }
 
@@ -133,6 +149,7 @@ public class BusinessRuleService {
                     "Business rule with id = " + id + " doesn't exist", HttpStatus.BAD_REQUEST);
 
         businessRuleRepository.delete(optionalBusinessRule.get());
+        logger.info("Business rule was removed!");
         return new ResponseEntity<>("Business rule deleted successfully", HttpStatus.NO_CONTENT);
     }
 
@@ -145,20 +162,56 @@ public class BusinessRuleService {
             return rangeMin == null && rangeMax == null;
         }
         if (rangeMin == null)
-            rangeMin = Double.MIN_VALUE;
+            rangeMin = -Double.MAX_VALUE;
         if (rangeMax == null)
             rangeMax = Double.MAX_VALUE;
-        if (rangeMin > rangeMax)
+        logger.info("Max: " + rangeMax + " min: " + rangeMin + (rangeMax > rangeMin));
+        if (rangeMin > rangeMax) {
+            logger.error("Wrong range values");
             throw new WrongWeatherConditionRangeException(
                     "Range minimum value can't be greater than range maximum value");
+        }
 
         for (BusinessRule businessRule : businessRules) {
-            if ((businessRule.getMinValueOfRange() >= rangeMin && businessRule.getMinValueOfRange() <= rangeMax) ||
+            if (businessRule.getMinValueOfRange() == null){
+                if (businessRule.getMaxValueOfRange() > rangeMin &&
+                    businessRule.getMaxValueOfRange() < rangeMax)
+                    throw new WrongWeatherConditionRangeException("Wrong range values");
+            } else if (businessRule.getMaxValueOfRange() == null) {
+                if (businessRule.getMinValueOfRange() > rangeMin &&
+                businessRule.getMinValueOfRange() < rangeMax)
+                    throw new WrongWeatherConditionRangeException("Wrong range values");
+            } else if ((businessRule.getMinValueOfRange() >= rangeMin && businessRule.getMinValueOfRange() <= rangeMax) ||
                     (businessRule.getMaxValueOfRange() >= rangeMin && businessRule.getMaxValueOfRange() <= rangeMax))
                 throw new WrongWeatherConditionRangeException(
-                        "There is already exist a business rule with the same weather condition range!");
+                        "There is already exist a business rule with the same weather condition range!"
+                );
         }
+        System.out.println(true);
         return true;
+    }
+
+    private BusinessRule overlapBusinessRules (List<BusinessRule> businessRules, BusinessRule businessRule) {
+
+        for (BusinessRule bRule : businessRules) {
+            if (businessRule.getMinValueOfRange() == null) {
+                if (bRule.getMinValueOfRange() == null &&
+                        bRule.getMaxValueOfRange() > businessRule.getMaxValueOfRange()) {
+                    bRule.setMinValueOfRange(businessRule.getMaxValueOfRange());
+                    businessRuleRepository.save(bRule);
+                    return businessRule;
+                }
+            }
+            else if (businessRule.getMaxValueOfRange() == null) {
+                if (bRule.getMaxValueOfRange() == null &&
+                        bRule.getMinValueOfRange() < businessRule.getMinValueOfRange()) {
+                    bRule.setMaxValueOfRange(businessRule.getMinValueOfRange());
+                    businessRuleRepository.save(bRule);
+                    return businessRule;
+                }
+            }
+        }
+        return null;
     }
 
 }
