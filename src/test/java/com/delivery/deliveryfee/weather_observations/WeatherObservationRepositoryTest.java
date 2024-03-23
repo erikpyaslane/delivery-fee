@@ -67,15 +67,24 @@ public class WeatherObservationRepositoryTest {
     }
 
     @Test
+    void testGetWeatherObservationByWrongStationName(){
+        String station = "Tallinn-Hark";
+        Optional<WeatherObservation> weatherObservation = weatherObservationRepository
+                .findTopByStationNameOrderByTimeOfObservationDesc(station);
+        assert weatherObservation.isEmpty();
+    }
+
+    @Test
     void testWeatherObservationByCityNameAndTimestamp(){
-        LocalDateTime dateTime = LocalDateTime.now();
-        String station = "Tartu";
+        LocalDateTime dateTime = LocalDateTime.now().minusHours(1);
+        String station = "Tallinn-Harku";
 
         Optional<WeatherObservation> weatherObservation = weatherObservationRepository
                 .findTopByStationNameAndTimeOfObservationIsBeforeOrderByTimeOfObservationDesc(station, dateTime);
 
         assert weatherObservation.isPresent();
-        //assert (weatherObservation.get().getAirTemperature());
+        assert weatherObservation.get().getAirTemperature() == 2.1;
+        assert weatherObservation.get().getWindSpeed() == 1.5;
 
     }
 

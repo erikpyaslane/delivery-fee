@@ -36,15 +36,15 @@ public class DeliveryFeeRepositoryTest {
         );
 
         RegionalBaseFee regionalBaseFee1 = new RegionalBaseFee(
-                "Tallinn", VehicleType.SCOOTER, 3.0
+                "Tallinn", VehicleType.SCOOTER, 3.5
         );
 
         RegionalBaseFee regionalBaseFee2 = new RegionalBaseFee(
-                "Tartu", VehicleType.SCOOTER, 2.5
+                "Tartu", VehicleType.SCOOTER, 3.0
         );
 
         RegionalBaseFee regionalBaseFee3= new RegionalBaseFee(
-                "Tartu", VehicleType.BIKE, 2.0
+                "Tartu", VehicleType.BIKE, 2.5
         );
 
         List<WeatherObservation> weatherObservations = new ArrayList<>(List.of(wo1, wo2));
@@ -67,6 +67,19 @@ public class DeliveryFeeRepositoryTest {
         assert (regionalBaseFee.getCityName().equals(city));
         assert (regionalBaseFee.getVehicleType() == vehicleType);
         assert (regionalBaseFee.getBaseFeeValue() == 2.5);
+
+    }
+
+    @Test
+    void testGetRegionalBaseFeeByCityNameThatDoNotExist(){
+        String city = "Tart";
+        VehicleType vehicleType = VehicleType.SCOOTER;
+
+        RegionalBaseFee regionalBaseFee = regionalBaseFeeRepository.findTopByCityNameAndVehicleType(
+                city, vehicleType
+        );
+
+        assert (regionalBaseFee == null);
 
     }
 
