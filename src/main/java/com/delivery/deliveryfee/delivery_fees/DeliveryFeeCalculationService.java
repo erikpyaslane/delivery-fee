@@ -134,7 +134,7 @@ public class DeliveryFeeCalculationService {
 
     private double calculateRBF(String cityName, VehicleType vehicleType) {
         RegionalBaseFee regionalBaseFee = getRegionalBaseFeeByCityNameAndVehicleType(cityName, vehicleType);
-        System.out.println(regionalBaseFee);
+        logger.info("RGB" + "(" + cityName + ", " + vehicleType + "): " + regionalBaseFee.getBaseFeeValue());
         return regionalBaseFee.getBaseFeeValue();
 
     }

@@ -31,10 +31,6 @@ class WeatherObservationServiceTest {
     @Mock
     private StationCityMappingService stationCityMappingService;
 
-    @Mock
-    StationCityMappingRepository stationCityMappingRepository;
-
-    @Spy
     @InjectMocks
     private WeatherObservationService weatherObservationService;
 
@@ -53,7 +49,7 @@ class WeatherObservationServiceTest {
         WeatherObservationDTO expectedDTO = new WeatherObservationDTO(1L, stationName, "26242", 5.0, 5.0, "", now);
         when(stationCityMappingService.getStationNameByCityName(cityName)).thenReturn(stationName);
         when(weatherObservationRepository.findTopByStationNameOrderByTimeOfObservationDesc(stationName))
-                .thenReturn(java.util.Optional.of(observation));
+                .thenReturn(Optional.of(observation));
         when(weatherObservationDTOMapper.apply(observation)).thenReturn(expectedDTO);
 
         // Act
